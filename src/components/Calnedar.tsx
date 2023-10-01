@@ -54,14 +54,14 @@ export default function Calendar() {
 
   const dayRenderer: DatePickerProps['renderDay'] = (date: Date) => {
     const day = date.getDate()
-    const dayWithNotes = 0
+
+    const hasNotes = dates.some(
+      (item) =>
+        new Date(item.date).getDate() === day && item.notes !== undefined
+    )
 
     return (
-      <Indicator
-        size={indicatorSize}
-        color="yellow"
-        disabled={day !== dayWithNotes}
-      >
+      <Indicator size={indicatorSize} color="yellow" disabled={!hasNotes}>
         <div> {day} </div>
       </Indicator>
     )

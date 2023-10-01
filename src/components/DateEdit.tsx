@@ -125,7 +125,7 @@ export default function DateEdit({
         <form onSubmit={handleSave}>
           <RadioGroup
             groupName="type"
-            defaultValue={dateConfig.type}
+            defaultValue={dateConfig.type || 'work'}
             label={t('dateType')}
             items={[
               { value: 'work', label: t('work') },
@@ -168,7 +168,11 @@ export default function DateEdit({
             </>
           )}
 
-          <Textarea label={t('notes')} mt="md" />
+          <Textarea
+            label={t('notes')}
+            mt="md"
+            onChange={(e) => handleFieldChange('notes', e.target.value)}
+          />
 
           <Flex mt="md" justify="space-between" align="center">
             <Button color="cyan" onClick={handleClearDateConfig}>
