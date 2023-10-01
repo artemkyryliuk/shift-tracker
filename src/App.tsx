@@ -1,35 +1,45 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Suspense } from 'react'
+import { Route, Routes } from 'react-router-dom'
+import { ColorSchemeProvider, MantineProvider } from '@mantine/core'
 
-function App() {
-  const [count, setCount] = useState(0)
+import { useAppDispatch, useAppSelector } from './store/hooks'
+import { updateSettings } from './store/settingsSlice'
+import Loader from './components/Loader'
+import Layout from './components/Layout'
+import HomePage from './pages/HomePage'
+import SettingsPage from './pages/SettingsPage'
+import type { Settings } from './components/types/settings'
+
+export default function App() {
+  const settings: Settings = useAppSelector((state) => state.settings)
+  const dispatch = useAppDispatch()
+
+  const toggleColorScheme = () => {
+    const colorScheme = settings.colorScheme === 'light' ? 'dark' : 'light'
+
+    dispatch(updateSettings({ ...settings, colorScheme }))
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <ColorSchemeProvider
+      colorScheme={settings.colorScheme}
+      toggleColorScheme={toggleColorScheme}
+    >
+      <MantineProvider
+        withGlobalStyles
+        withNormalizeCSS
+        theme={{ colorScheme: settings.colorScheme }}
+      >
+        <Suspense fallback={<Loader />}>
+          <Layout>
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+
+              <Route path="/settings" element={<SettingsPage />} />
+            </Routes>
+          </Layout>
+        </Suspense>
+      </MantineProvider>
+    </ColorSchemeProvider>
   )
 }
-
-export default App
