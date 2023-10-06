@@ -125,7 +125,7 @@ export default function DateEdit({
         <form onSubmit={handleSave}>
           <RadioGroup
             groupName="type"
-            defaultValue={dateConfig.type || 'work'}
+            defaultValue={dateConfig.type}
             label={t('dateType')}
             items={[
               { value: 'work', label: t('work') },

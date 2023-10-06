@@ -72,6 +72,10 @@ export default function SettingsPage() {
           handleFieldChange(e.target.value, 'salary')
         }
       />
+
+      <Title mt={fontSize} fz={fontSize} fw={500}>
+        Colors
+      </Title>
     </Container>
   )
 }

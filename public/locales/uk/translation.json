@@ -1,8 +1,8 @@
 {
   "appName": "Графік змін",
   "calendarDays": "Календарні дні",
-  "workingDays": "Робочі",
-  "dayOffDays": "Вихідні",
+  "workingDays": "Робочі дні",
+  "dayOffDays": "Вихідні дні",
   "exchangeDays": "Біржа змін",
   "sickLeaveDays": "Лікарняні",
   "vacationDays": "Відпускні",

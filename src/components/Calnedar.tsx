@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDisclosure } from '@mantine/hooks'
-import { Indicator } from '@mantine/core'
+import { Badge, Indicator, Text } from '@mantine/core'
 import { DatePicker, DatePickerProps } from '@mantine/dates'
 import 'dayjs/locale/uk'
 
@@ -50,7 +50,7 @@ export default function Calendar() {
     setDateConfig({ ...initialDateConfig, date })
   }
 
-  const indicatorSize = +fontSize.slice(0, 2) / 2.5
+  const convertedFontSize = +fontSize.slice(0, 2)
 
   const dayRenderer: DatePickerProps['renderDay'] = (date: Date) => {
     const day = date.getDate()
@@ -60,9 +60,37 @@ export default function Calendar() {
         new Date(item.date).getDate() === day && item.notes !== undefined
     )
 
+    const foundConfig = dates.find(
+      (item) => item.date === date.toLocaleDateString()
+    )
+
+    const dayColor = () => {
+      switch (foundConfig?.type) {
+        case 'work':
+          return 'green'
+        case 'dayOff':
+          return 'blue'
+        case 'exchange':
+          return 'lime'
+        case 'sickLeave':
+          return 'red'
+        case 'vacation':
+          return 'orange'
+        default:
+          return 'blue'
+      }
+    }
+
     return (
-      <Indicator size={indicatorSize} color="yellow" disabled={!hasNotes}>
-        <div> {day} </div>
+      <Indicator color="yellow" withBorder disabled={!hasNotes}>
+        <Badge
+          variant={foundConfig ? 'filled' : 'light'}
+          fullWidth
+          h={28}
+          color={dayColor()}
+        >
+          <Text fz={convertedFontSize / 1.5}> {day} </Text>
+        </Badge>
       </Indicator>
     )
   }
@@ -77,8 +105,20 @@ export default function Calendar() {
           calendarHeader: { maxWidth: '100%' },
           calendarHeaderLevel: { fontSize },
           weekday: { fontSize },
-          day: { fontSize },
-          month: { width: '100%' },
+          day: {
+            padding: 20,
+            borderRadius: '0px',
+            fontSize,
+            ':hover': { background: 'none' },
+            '&[data-selected=true]': {
+              borderBottom: '2px solid gray',
+              background: 'none',
+            },
+            '&[data-selected=true]:hover': {
+              background: 'none',
+            },
+          },
+          month: { width: '100%', height: `${convertedFontSize * 15 + 100}px` },
           monthCell: { textAlign: 'center' },
           yearLevel: { width: '100%' },
           monthsList: { width: '100%' },
