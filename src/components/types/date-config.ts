@@ -6,15 +6,15 @@ export type DateType =
   | 'vacation'
   | ''
 
-export type Break = 'hour' | 'halfHour' | 'none' | ''
+export type BreakTime = 'hour' | 'halfHour' | 'none' | ''
 
 export type DateConfig = {
   date: string
   type: DateType
   shiftStart: string
-  break: Break
+  breakTime: BreakTime
   shiftEnd: string
   notes?: string
 }
 
-export type DateConfigValues = DateConfig['type'] | DateConfig['break']
+export type DateConfigValues = DateConfig['type'] | DateConfig['breakTime']

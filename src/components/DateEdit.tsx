@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Button, Flex, Group, Modal, Textarea } from '@mantine/core'
-import { useDisclosure } from '@mantine/hooks'
 import { useTranslation } from 'react-i18next'
 
 import { useAppDispatch, useAppSelector } from '../store/hooks'
 import { updateDates } from '../store/datesSlice'
+import { useFormattedDate } from './hooks/useFormattedDate'
 import RadioGroup from './RadioGroup'
 import TimeField from './TimeField'
-import ConfirmDialog from './ConfirmDialog'
+import PresetPicker from './PresetPicker'
 import type { DateConfig } from './types/date-config'
 
 export default function DateEdit({
@@ -21,11 +21,12 @@ export default function DateEdit({
   opened: boolean
   close: () => void
 }) {
-  const dates: DateConfig[] = useAppSelector((state) => state.dates)
-  const fontSize: string = useAppSelector((state) => state.settings.fontSize)
+  const dates = useAppSelector((state) => state.dates)
+  const { presets } = useAppSelector((state) => state.settings)
+
   const dispatch = useAppDispatch()
 
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
 
   const [changedDateConfig, setChangedDateConfig] =
     useState<DateConfig>(dateConfig)
@@ -34,62 +35,20 @@ export default function DateEdit({
     setChangedDateConfig(dateConfig)
   }, [dateConfig])
 
-  const [confirmOpened, { open: openConfirm, close: closeConfirm }] =
-    useDisclosure(false)
-
-  const formattedDate: string = new Intl.DateTimeFormat(i18n.language, {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  }).format(new Date(dateConfig.date))
+  const formattedDate = useFormattedDate(dateConfig.date)
 
   const handleFieldChange = (field: keyof DateConfig, value: string) => {
     setChangedDateConfig((prev) => ({ ...prev!, [field]: value }))
   }
 
-  const saveChanges = () => {
-    const existingDateConfig = dates.find(
-      (item) => item.date === dateConfig.date
-    )
-
-    if (existingDateConfig) {
-      const newDates: DateConfig[] = dates.map((item) =>
-        item.date === changedDateConfig.date ? changedDateConfig : item
-      )
-      dispatch(updateDates(newDates))
-    } else {
-      dispatch(updateDates([...dates, changedDateConfig]))
-    }
-
-    resetDateConfig(dateConfig.date)
+  const handlePresetChange = (presetIndex: number): void => {
+    const presetConfig = presets[presetIndex]
+    setChangedDateConfig((prev) => ({ ...prev!, ...presetConfig }))
   }
 
-  const closeModals = () => {
-    closeConfirm()
+  const closeModal = () => {
     close()
-    resetDateConfig(dateConfig.date)
-  }
-
-  const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    saveChanges()
-    close()
-  }
-
-  const handleCancel = () => {
-    setChangedDateConfig(dateConfig)
-    close()
-    resetDateConfig(dateConfig.date)
-  }
-
-  const handleClose = () => {
-    if (JSON.stringify(dateConfig) !== JSON.stringify(changedDateConfig)) {
-      openConfirm()
-    } else {
-      close()
-    }
-
-    resetDateConfig(dateConfig.date)
+    setTimeout(() => resetDateConfig(dateConfig.date), 200)
   }
 
   const handleClearDateConfig = () => {
@@ -97,18 +56,36 @@ export default function DateEdit({
       (item) => item.date !== dateConfig.date
     )
     dispatch(updateDates(newDates))
-    close()
-    resetDateConfig(dateConfig.date)
+
+    closeModal()
   }
 
-  const handleConfirmCancel = () => {
+  const handleCancel = () => {
     setChangedDateConfig(dateConfig)
-    closeModals()
+    closeModal()
   }
 
-  const handleConfirmSave = () => {
-    saveChanges()
-    closeModals()
+  const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+
+    const existingDateConfig = dates.find(
+      (item) => item.date === dateConfig.date
+    )
+
+    if (existingDateConfig) {
+      const newDates = dates.map((item) =>
+        item.date === dateConfig.date ? changedDateConfig : item
+      )
+      dispatch(updateDates(newDates))
+    } else {
+      dispatch(updateDates([...dates, changedDateConfig]))
+    }
+
+    closeModal()
+  }
+
+  const handleClose = () => {
+    closeModal()
   }
 
   return (
@@ -119,13 +96,18 @@ export default function DateEdit({
         onClose={handleClose}
         centered
         styles={(theme) => ({
-          title: { fontSize, color: theme.colors.blue },
+          title: {
+            fontSize: 24,
+            fontFamily: 'Lobster',
+            color: theme.colors.blue,
+          },
         })}
       >
         <form onSubmit={handleSave}>
           <RadioGroup
             groupName="type"
             defaultValue={dateConfig.type}
+            value={changedDateConfig.type}
             label={t('dateType')}
             items={[
               { value: 'work', label: t('work') },
@@ -142,37 +124,45 @@ export default function DateEdit({
             <>
               <TimeField
                 groupName="shiftStart"
-                defaultValue={dateConfig.shiftStart}
+                value={changedDateConfig.shiftStart}
                 label={t('shiftStart')}
                 onChange={(value) => handleFieldChange('shiftStart', value)}
               />
 
               <TimeField
                 groupName="shiftEnd"
-                defaultValue={dateConfig.shiftEnd}
+                value={changedDateConfig.shiftEnd}
                 label={t('shiftEnd')}
                 onChange={(value) => handleFieldChange('shiftEnd', value)}
               />
 
               <RadioGroup
-                groupName="break"
-                defaultValue={dateConfig.break}
+                groupName="breakTime"
+                defaultValue={dateConfig.breakTime}
+                value={changedDateConfig.breakTime}
                 label={t('break')}
                 items={[
                   { value: 'hour', label: t('hour') },
                   { value: 'halfHour', label: t('halfHour') },
                   { value: 'none', label: t('none') },
                 ]}
-                onChange={(value) => handleFieldChange('break', value)}
+                onChange={(value) => handleFieldChange('breakTime', value)}
               />
             </>
           )}
 
           <Textarea
+            value={changedDateConfig.notes}
             label={t('notes')}
             mt="md"
+            styles={{
+              label: { fontSize: 20 },
+              input: { marginTop: 10, fontSize: 20 },
+            }}
             onChange={(e) => handleFieldChange('notes', e.target.value)}
           />
+
+          <PresetPicker onChange={handlePresetChange} />
 
           <Flex mt="md" justify="space-between" align="center">
             <Button color="cyan" onClick={handleClearDateConfig}>
@@ -190,13 +180,6 @@ export default function DateEdit({
           </Flex>
         </form>
       </Modal>
-
-      <ConfirmDialog
-        opened={confirmOpened}
-        close={closeConfirm}
-        handleConfirmCancel={handleConfirmCancel}
-        handleConfirmSave={handleConfirmSave}
-      />
     </>
   )
 }

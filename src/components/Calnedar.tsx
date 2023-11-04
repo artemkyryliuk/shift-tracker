@@ -6,6 +6,7 @@ import { DatePicker, DatePickerProps } from '@mantine/dates'
 import 'dayjs/locale/uk'
 
 import { useAppSelector } from '../store/hooks'
+import { getDayColor } from '../utils/getDayColor'
 import DateEdit from './DateEdit'
 import Stats from './Stats'
 import { findConfig } from '../utils/findConfig'
@@ -13,7 +14,6 @@ import type { DateConfig } from './types/date-config'
 
 export default function Calendar() {
   const dates: DateConfig[] = useAppSelector((state) => state.dates)
-  const { fontSize } = useAppSelector((state) => state.settings)
 
   const { i18n } = useTranslation()
 
@@ -22,7 +22,7 @@ export default function Calendar() {
     type: '',
     shiftStart: '',
     shiftEnd: '',
-    break: '',
+    breakTime: '',
   }
 
   const [dateConfig, setDateConfig] = useState<DateConfig>(initialDateConfig)
@@ -50,8 +50,6 @@ export default function Calendar() {
     setDateConfig({ ...initialDateConfig, date })
   }
 
-  const convertedFontSize = +fontSize.slice(0, 2)
-
   const dayRenderer: DatePickerProps['renderDay'] = (date: Date) => {
     const day = date.getDate()
 
@@ -64,32 +62,23 @@ export default function Calendar() {
       (item) => item.date === date.toLocaleDateString()
     )
 
-    const dayColor = () => {
-      switch (foundConfig?.type) {
-        case 'work':
-          return 'green'
-        case 'dayOff':
-          return 'blue'
-        case 'exchange':
-          return 'lime'
-        case 'sickLeave':
-          return 'red'
-        case 'vacation':
-          return 'orange'
-        default:
-          return 'blue'
-      }
-    }
-
     return (
       <Indicator color="yellow" withBorder disabled={!hasNotes}>
         <Badge
-          variant={foundConfig ? 'filled' : 'light'}
+          variant={foundConfig ? 'filled' : 'outline'}
           fullWidth
           h={28}
-          color={dayColor()}
+          color={getDayColor(foundConfig?.type)}
+          styles={{
+            root: {
+              border: 'none',
+              borderRadius: `${foundConfig ? 20 : 0}px`,
+              fontSize: 20,
+              fontWeight: 700,
+            },
+          }}
         >
-          <Text fz={convertedFontSize / 1.5}> {day} </Text>
+          <Text> {day} </Text>
         </Badge>
       </Indicator>
     )
@@ -100,25 +89,28 @@ export default function Calendar() {
       <DatePicker
         defaultValue={new Date()}
         locale={i18n.language}
+        mt={120}
         p={15}
         styles={{
           calendarHeader: { maxWidth: '100%' },
-          calendarHeaderLevel: { fontSize },
-          weekday: { fontSize },
+          calendarHeaderLevel: { fontSize: 24 },
+          weekday: { fontSize: 24 },
           day: {
-            padding: 20,
             borderRadius: '0px',
-            fontSize,
             ':hover': { background: 'none' },
             '&[data-selected=true]': {
-              borderBottom: '2px solid gray',
+              border: '2px solid #003f5c',
+              borderRadius: '50px',
               background: 'none',
+              width: 40,
+              height: 40,
+              boxShadow: '2px 2px 10px 0px #00000088',
             },
             '&[data-selected=true]:hover': {
               background: 'none',
             },
           },
-          month: { width: '100%', height: `${convertedFontSize * 15 + 100}px` },
+          month: { width: '100%', height: 350 },
           monthCell: { textAlign: 'center' },
           yearLevel: { width: '100%' },
           monthsList: { width: '100%' },

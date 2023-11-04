@@ -4,12 +4,8 @@ import type { Settings } from '../components/types/settings'
 
 const initialState: Settings = {
   colorScheme: 'light',
-  fontSize: '20px',
   salary: 0,
-  dayColors: {
-    work: 'blue',
-    dayOff: 'green',
-  },
+  presets: [],
 }
 
 const settingsSlice = createSlice({

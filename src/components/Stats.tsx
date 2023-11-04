@@ -1,4 +1,4 @@
-import { Container, Flex, Text } from '@mantine/core'
+import { Container, Flex, Text, useMantineColorScheme } from '@mantine/core'
 import { useTranslation } from 'react-i18next'
 
 import { useAppSelector } from '../store/hooks'
@@ -10,9 +10,12 @@ export default function Stats({
   selectedDate: { month: number; year: number }
 }) {
   const dates = useAppSelector((state) => state.dates)
-  const { fontSize, salary } = useAppSelector((state) => state.settings)
+  const { salary } = useAppSelector((state) => state.settings)
 
   const { t } = useTranslation()
+
+  const { colorScheme } = useMantineColorScheme()
+  const isLightTheme = colorScheme === 'light'
 
   const getDaysInMonth = () => {
     const nextMonth = new Date(selectedDate.year, selectedDate.month, 0)
@@ -51,7 +54,7 @@ export default function Stats({
       const endMinutes = +endTime[0] * 60 + +endTime[1]
 
       const getBreakMinutes = () => {
-        switch (item.break) {
+        switch (item.breakTime) {
           case 'hour':
             return 60
           case 'halfHour':
@@ -80,8 +83,40 @@ export default function Stats({
     return { hours, minutes }
   }
 
+  const totalSalary = getWorkingHours().hours * salary
+
+  const getTodayNotes = () => {
+    const foundTodayNotes = dates.find(
+      (item) => item.date === new Date().toLocaleDateString()
+    )
+
+    if (foundTodayNotes) {
+      return foundTodayNotes.notes
+    }
+
+    return null
+  }
+
   return (
-    <Container p={30}>
+    <Container
+      fluid
+      p={30}
+      sx={{
+        background: isLightTheme ? '#fff' : '#222',
+        boxShadow: '0px 0px 20px 0px #00000033',
+      }}
+    >
+      {getTodayNotes() && (
+        <Text
+          mb={10}
+          p={10}
+          bg={isLightTheme ? '#eee' : '#333'}
+          sx={{ borderRadius: 10 }}
+        >
+          {getTodayNotes()}
+        </Text>
+      )}
+
       {[
         { label: t('calendarDays'), value: getDaysInMonth() },
         { label: t('workingDays'), value: getDaysNumber('work') },
@@ -91,20 +126,23 @@ export default function Stats({
         { label: t('vacationDays'), value: getDaysNumber('vacation') },
         {
           label: t('workingHours'),
-          value: `${getWorkingHours().hours} ${t('hours')} ${
-            getWorkingHours().minutes
-          } ${t('minutes')}`,
+          value:
+            getWorkingHours().hours + getWorkingHours().minutes > 0
+              ? `${getWorkingHours().hours} ${t('hours')} ${
+                  getWorkingHours().minutes
+                } ${t('minutes')}`
+              : 0,
         },
         {
           label: t('salary'),
-          value: `${getWorkingHours().hours * salary} ${t('hrn')}`,
+          value: totalSalary !== 0 ? `${totalSalary} ${t('hrn')}` : 0,
         },
       ].map(({ label, value }) => {
         if (value !== 0) {
           return (
-            <Flex key={label} justify="space-between">
-              <Text fz={fontSize}> {`${label}:`} </Text>
-              <Text fz={fontSize}> {value} </Text>
+            <Flex key={label} justify="space-between" fz={20}>
+              <Text> {`${label}:`} </Text>
+              <Text> {value} </Text>
             </Flex>
           )
         }
